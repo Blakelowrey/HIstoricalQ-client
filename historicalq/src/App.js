@@ -15,6 +15,10 @@ class App extends React.Component{
       entries : []
     };
   }
+  clearEntries = () => {
+    let emptyArray = [];
+    this.setState({entries: emptyArray});
+  }
 
   getRandomEntries = (amount = 3) => {
     console.log(this);
@@ -42,7 +46,7 @@ class App extends React.Component{
     this.setState({entries: randomEntries});
     
   }
-  getSortEntries = (params = {sortBy: 'alphabetical'}) => {
+  getSortEntries = (params = {}) => {
     let newEntries = [...STORE];
     console.log(newEntries);
     if (params.sortBy) {
@@ -61,6 +65,43 @@ class App extends React.Component{
         console.log(newEntries);
       }
     }
+    if(params.era){
+      console.log('era working');
+      if(params.era === 'antiquity'){
+        newEntries = newEntries.filter(entry => {
+          if(entry.EOB === 'BC'){
+            return true;
+          }
+          else if (entry.EOB === 'AD'){
+            if(entry.YOB < 400){
+              return true;
+            }
+          }
+          return false;
+        });
+      }
+      if(params.era === 'medieval'){
+        newEntries = newEntries.filter(entry => {
+          if (entry.EOB === 'AD'){
+            if(entry.YOB > 400 && entry.YOB < 1500){
+              return true;
+            }
+          }
+          return false;
+        });
+      }
+      if(params.era === 'modern'){
+        newEntries = newEntries.filter(entry => {
+          if (entry.EOB === 'AD'){
+            if(entry.YOB >= 1500){
+              return true;
+            }
+          }
+          return false;
+        });
+      }
+
+    }
 
     this.setState({entries: newEntries});
 
@@ -73,23 +114,20 @@ class App extends React.Component{
       <main role='main'>
         <Route exact path ='/' render={()=>{
            return (<>
-           <AboutBox getRandomEntries={this.getRandomEntries} />
-           <EntryList entries={this.state.entries}/>
+           <AboutBox getRandomEntries={this.getRandomEntries}/>
            </>);
          }}/>
         <Route exact path ='/search' render={()=>{
            return (<>
-           <SearchForm getSortEntries={this.getSortEntries}/>
-           <EntryList entries={this.state.entries}/>
+           <SearchForm getSortEntries={this.getSortEntries} clearEntries={this.clearEntries}/>
            </>);
         }}/>
         <Route exact path ='/account' render={()=>{
           return (<>
-          <AccountInfo/>
-          <EntryList entries={this.state.entries}/>
+          <AccountInfo  clearEntries={this.clearEntries}/>
           </>);
         }}/>
-        
+        <EntryList entries={this.state.entries}/>
       </main>
       </>
     );

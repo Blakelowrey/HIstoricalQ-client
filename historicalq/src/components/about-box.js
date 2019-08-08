@@ -6,6 +6,7 @@ class AboutBox extends React.Component{
     this.props.getRandomEntries();
   }
   
+  
 
   render(){
     return(

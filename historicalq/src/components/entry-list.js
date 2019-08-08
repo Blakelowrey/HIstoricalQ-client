@@ -7,9 +7,9 @@ class EntryList extends React.Component{
 
   render(){
     
-    let myEntries = this.props.entries.map(entry => {
-      return <Entry entry={entry}/>
-    })
+    let myEntries = this.props.entries.map((entry, index) => {
+      return <Entry entry={entry} key={index}/>
+    });
     return myEntries;
 
 
