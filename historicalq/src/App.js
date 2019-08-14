@@ -1,116 +1,94 @@
 import React from 'react';
 import './App.css';
-import { Route } from 'react-router-dom';
+import { Route, withRouter } from 'react-router-dom';
 import Header from './components/header.js';
 import AboutBox from './components/about-box.js';
-import SearchForm from './components/search-form.js'
-import AccountInfo from './components/account-info.js'
-import EntryList from './components/entry-list.js'
-import STORE from './STORE.js'
+import SearchForm from './components/search-form.js';
+import AccountInfo from './components/account-info.js';
+import EntryList from './components/entry-list.js';
+import LogInForm from './components/login-form.js';
+import SignUpForm from './components/signup-form.js';
+import config from './config.js';
+import TokenService from './token-service.js';
 
 class App extends React.Component{
-  constructor(){
-    super();
+  constructor(props){
+    super(props);
     this.state = {
-      entries : []
+      entries : [],
+      loggedIn : false,
+      accountInfo : {},
     };
+  }
+  login = (params = {username: '', password : ''}) => {
+    fetch(`${config.API_ENDPOINT}/users/login`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(params)
+    }).then(res => res.json()).then(data =>{
+        const {message, token} = data;
+        if(message === 'auth success' && token){
+          console.log(data);
+          TokenService.saveAuthToken(token);
+          this.setState({loggedIn : true});
+          //this.props.history.push('/account');
+        }
+    });
+  }
+  getAccountInfo = () => {
+    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
+    
+    console.log(`bearer ${jwt}`);
+    fetch(`${config.API_ENDPOINT}/users/login`, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization' : `bearer ${jwt}`
+      }
+    }).then(res=>res.json()).then(data =>{
+      console.log(data);
+    });
+        
+  }
+  getAllEntries = () => {
+    fetch(`${config.API_ENDPOINT}/entries`)
+    .then(res => res.json())
+    .then(data =>{
+      console.log(`data : ${data}`);
+      this.setState({entries:data})
+    }).catch(err => console.log(err));
+
   }
   clearEntries = () => {
     let emptyArray = [];
     this.setState({entries: emptyArray});
   }
 
-  getRandomEntries = (amount = 3) => {
-    console.log(this);
-    let randomEntries = [];
-    let indexArray = [];
-    let i = 0;
-    while( i < amount){
-      let randomIndex = Math.floor(Math.random() * STORE.length)
-      let isSame = false;
-      indexArray.forEach(index => {
-        if(index === randomIndex){
-          isSame = true;
-        }
-      })
-      if (!isSame){
-        indexArray.push(randomIndex);
-        i++;
-      }
-    }
-    console.log(indexArray);
-    indexArray.forEach(index => {
-      randomEntries.push(STORE[index]);
-    })
-    console.log(randomEntries);
-    this.setState({entries: randomEntries});
-    
-  }
+  getRandomEntries = (amount = 4) => {
+    const paramsString = `?sortBy=${amount}`;
+    fetch(`${config.API_ENDPOINT}/entries/random` + paramsString)
+    .then(res => res.json())
+    .then(data => {
+      this.setState({entries: data});
+    });
+  };
+
   getSortEntries = (params = {}) => {
-    let newEntries = [...STORE];
-    console.log(newEntries);
-    if (params.sortBy) {
-      if (params.sortBy === 'alphabetical'){
-        newEntries.sort((a,b) =>{
-          let charCodeA = a.name.toLowerCase().charCodeAt(0);
-          let charCodeB = b.name.toLowerCase().charCodeAt(0);
-          return charCodeA - charCodeB;
-        })
-        console.log(newEntries);
-      }
-      if (params.sortBy === 'YOB'){
-        newEntries.sort((a,b) =>{
-          return a.YOB-b.YOB;
-        })
-        console.log(newEntries);
-      }
-    }
-    if(params.era){
-      console.log('era working');
-      if(params.era === 'antiquity'){
-        newEntries = newEntries.filter(entry => {
-          if(entry.EOB === 'BC'){
-            return true;
-          }
-          else if (entry.EOB === 'AD'){
-            if(entry.YOB < 400){
-              return true;
-            }
-          }
-          return false;
-        });
-      }
-      if(params.era === 'medieval'){
-        newEntries = newEntries.filter(entry => {
-          if (entry.EOB === 'AD'){
-            if(entry.YOB > 400 && entry.YOB < 1500){
-              return true;
-            }
-          }
-          return false;
-        });
-      }
-      if(params.era === 'modern'){
-        newEntries = newEntries.filter(entry => {
-          if (entry.EOB === 'AD'){
-            if(entry.YOB >= 1500){
-              return true;
-            }
-          }
-          return false;
-        });
-      }
-
-    }
-
-    this.setState({entries: newEntries});
-
+    const paramsString = `?sortBy=${params.sortBy}&era=${params.era}`;
+    console.log(paramsString);
+    fetch(`${config.API_ENDPOINT}/entries/sort`+paramsString ).then(res => res.json())
+    .then(data => {
+      console.log(`data: ${data}`);
+      this.setState({entries : data});
+    });
   };
 
   render(){
     return (
       <>
-      <Header/>
+      <Header loggedIn={this.state.loggedIn}/>
       <main role='main'>
         <Route exact path ='/' render={()=>{
            return (<>
@@ -124,8 +102,18 @@ class App extends React.Component{
         }}/>
         <Route exact path ='/account' render={()=>{
           return (<>
-          <AccountInfo  clearEntries={this.clearEntries}/>
+          <AccountInfo getAccountInfo={this.getAccountInfo} clearEntries={this.clearEntries} getAllEntries={this.getAllEntries}/>
           </>);
+        }}/>
+        <Route exact path ='/logIn' render={()=>{
+          return (
+            <LogInForm login={this.login}/>
+          );
+        }}/>
+         <Route exact path ='/signUp' render={()=>{
+          return (
+            <SignUpForm/>
+          );
         }}/>
         <EntryList entries={this.state.entries}/>
       </main>

@@ -13,13 +13,13 @@ class Entry extends React.Component {
         this.setState({expanded : !this.state.expanded});
       }}>
         <h3>{this.props.entry.name}</h3>
-        <p>{this.props.entry.desc}</p>
+        <p>{this.props.entry.description}</p>
         {this.state.expanded?
         <div className='expanded-info'>
-          <p>Year of Birth: {this.props.entry.YOB}{this.props.entry.EOB}</p>
-          <p>Place of Birth: {this.props.entry.POB}</p>
-          <p>Year of Death: {this.props.entry.YOD}{this.props.entry.EOD}</p>
-          <p>Place of Death: {this.props.entry.POD}</p>
+          <p>Year of Birth: {this.props.entry.yob}{this.props.entry.eob}</p>
+          <p>Place of Birth: {this.props.entry.pob}</p>
+          <p>Year of Death: {this.props.entry.yod}{this.props.entry.eod}</p>
+          <p>Place of Death: {this.props.entry.pod}</p>
 
           
         </div>

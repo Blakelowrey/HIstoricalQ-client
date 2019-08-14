@@ -5,6 +5,10 @@ class AccountInfo extends React.Component{
   componentWillMount(){
     this.props.clearEntries();
   }
+  componentDidMount(){
+    this.props.getAccountInfo();
+    this.props.getAllEntries();
+  }
   
   render(){
     return(
