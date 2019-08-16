@@ -1,5 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link , withRouter } from 'react-router-dom';
+import config from '../config.js';
+import TokenService from '../token-service.js';
+
+
 
 
 class LogInForm extends React.Component{
@@ -17,11 +21,33 @@ class LogInForm extends React.Component{
 
   handleSubmit = (event) => {
     event.preventDefault();
-    const props = {
-      email: this.state.email,
-      password: this.state.password};
-    console.log(props);
-    this.props.login(props);
+    if (this.state.email > 2 && this.state.password > 2){
+      const props = {
+        email: this.state.email,
+        password: this.state.password};
+      console.log(props);
+      this.login(props);
+    }
+  }
+  login = (params = {username: '', password : ''}) => {
+    fetch(`${config.API_ENDPOINT}/users/login`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(params)
+    }).then(res => res.json()).then(data =>{
+        const {message, token} = data;
+        if(message === 'auth success' && token){
+          console.log(data);
+          TokenService.saveAuthToken(token);
+          this.props.setAppState({
+            loggedIn : true,
+            favoriteIds : [0]
+          });
+          this.props.history.push('/account');
+        }
+    });
   }
   handleEmailChange = (event) => {
     this.setState({email: event.target.value});
@@ -39,7 +65,7 @@ class LogInForm extends React.Component{
       <div>
       <h4>Email : </h4>
         <label>
-          <textarea value={this.state.email} onChange={this.handleEmailChange} />
+        <input type="email" value={this.state.email} onChange={this.handleEmailChange} />
         </label>
       </div>
       <div>
@@ -64,4 +90,4 @@ class LogInForm extends React.Component{
 
 }
 
-export default LogInForm;
+export default withRouter(LogInForm);

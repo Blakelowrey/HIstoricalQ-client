@@ -1,4 +1,8 @@
 import React from 'react';
+import config from '../config.js';
+import TokenService from '../token-service.js';
+import { withRouter } from 'react-router-dom';
+
 
 class AccountInfo extends React.Component{
   
@@ -6,10 +10,71 @@ class AccountInfo extends React.Component{
     this.props.clearEntries();
   }
   componentDidMount(){
-    this.props.getAccountInfo();
-    this.props.getFavorites();
+    this.getAccountInfo();
+    this.getFavorites();
   }
-  
+  logout = () => {
+    TokenService.clearAuthToken();
+    this.props.setAppState({
+      loggedIn : false,
+      accountInfo : {},
+      favoritesIds : []
+    });
+    this.props.history.push('/');
+  }
+  getFavorites = () => {
+    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
+    
+    console.log(`bearer ${jwt}`);
+    fetch(`${config.API_ENDPOINT}/users/favorites`, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization' : `bearer ${jwt}`
+      }
+    })
+    .then(res=>res.json())
+    .then(data =>{
+      console.log(data);
+      this.props.setAppState({entries: data});
+    });  
+  }
+  deleteAccount = () => {
+    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
+    
+    console.log(`bearer ${jwt}`);
+    fetch(`${config.API_ENDPOINT}/users/login`, {
+      method: 'DELETE',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization' : `bearer ${jwt}`
+      }
+    })
+    .then(res=>res.json())
+    .then(data =>{
+      console.log(data);
+      const {message} = data;
+      if (message === 'user delete success'){
+        this.logout();
+      }
+    });  
+  }
+  getAccountInfo = () => {
+    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
+    
+    console.log(`bearer ${jwt}`);
+    fetch(`${config.API_ENDPOINT}/users/login`, {
+      method: 'GET',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization' : `bearer ${jwt}`
+      }
+    }).then(res=>res.json()).then(data =>{
+      //const {} = data
+      console.log(data);
+      this.props.setAppState({accountInfo : data});
+    });  
+  }
   render(){
     return(
       <header role="banner">
@@ -33,7 +98,8 @@ class AccountInfo extends React.Component{
         </>
         : ''}
         <br/>
-        <button onClick={()=>this.props.logout()}>logout</button>
+        <button onClick={()=>this.logout()}>logout</button>
+        <button onClick={()=>this.deleteAccount()}>deleteAccount</button>
         <br/>
         <h3>Your Favorites below!</h3>
       </header>
@@ -44,4 +110,4 @@ class AccountInfo extends React.Component{
 
 
 }
-export default AccountInfo;
+export default withRouter(AccountInfo);

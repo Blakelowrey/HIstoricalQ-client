@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import { Route, Redirect } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import Header from './components/header.js';
 import AboutBox from './components/about-box.js';
 import SearchForm from './components/search-form.js';
@@ -9,7 +9,6 @@ import EntryList from './components/entry-list.js';
 import LogInForm from './components/login-form.js';
 import SignUpForm from './components/signup-form.js';
 import config from './config.js';
-import TokenService from './token-service.js';
 
 class App extends React.Component{
   constructor(props){
@@ -19,8 +18,6 @@ class App extends React.Component{
       loggedIn : false,
       accountInfo : {},
       favoritesIds : [],
-      redirect : false,
-      redirectTarget: '/'
     };
   }
   componentWillMount(){
@@ -29,148 +26,11 @@ class App extends React.Component{
       this.setState({loggedIn : true})
     }
   }
-  getFavoritesIds = () => {
-    const jwt = window.localStorage.getItem(config.TOKEN_KEY);
-    fetch(`${config.API_ENDPOINT}/users/favorites/arr`, {
-      method: 'GET',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization' : `bearer ${jwt}`
-      }
-    }).then(res => res.json()).then(data =>{
-        const {message} = data;
-        if(!message){
-          console.log(data);
-          let ids = [];
-          data.forEach(item => ids.push(item.entry_ref))
-          console.log(ids);
-          this.setState({favoritesIds : ids});
-        }
-    });
-
+  
+  setAppState = (params = {}) => {
+    this.setState(params);
   }
-  deleteFavorite = (entry_ref) => {
-    let params = {entry_ref};
-    const jwt = window.localStorage.getItem(config.TOKEN_KEY);
-    fetch(`${config.API_ENDPOINT}/users/favorites`, {
-      method: 'delete',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization' : `bearer ${jwt}`
-      },
-      body: JSON.stringify(params)})
-      .then(res => res.json())
-      .then(data=>{
-        console.log(data);
-        let favoritesIdsCopy = [...this.state.favoritesIds];
-        favoritesIdsCopy = favoritesIdsCopy.filter(id => {
-          return (id !== entry_ref);
-        });
-        this.setState({favoritesIds : favoritesIdsCopy})
-      })
-  }
-  login = (params = {username: '', password : ''}) => {
-    fetch(`${config.API_ENDPOINT}/users/login`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(params)
-    }).then(res => res.json()).then(data =>{
-        const {message, token} = data;
-        if(message === 'auth success' && token){
-          console.log(data);
-          TokenService.saveAuthToken(token);
-          this.setState({
-            loggedIn : true,
-            favoriteIds : [0]
-          });
-          this.redirectToTarget('/account')
-        }
-    });
-  }
-  logout = () => {
-    TokenService.clearAuthToken();
-    this.setState({
-      entries : [],
-      loggedIn : false,
-      accountInfo : {},
-      favoritesIds : []
-    });
-  }
-  createUser = (params = {username : '', password : '', email : ''})  => {
-    fetch(`${config.API_ENDPOINT}/users/create`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify(params)
-    }).then(res => res.json()).then(data =>{
-        const {message, token} = data;
-        if(message === 'user created'&& token){
-          console.log(data);
-          TokenService.saveAuthToken(token);
-          this.setState({loggedIn : true});
-          this.redirectToTarget('/account');
-        }
-    });
-  }
-  redirectToTarget = (target = '/') => {
-    this.props.history.push(target);
-  }
-  getAccountInfo = () => {
-    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
-    
-    console.log(`bearer ${jwt}`);
-    fetch(`${config.API_ENDPOINT}/users/login`, {
-      method: 'GET',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization' : `bearer ${jwt}`
-      }
-    }).then(res=>res.json()).then(data =>{
-      //const {} = data
-      console.log(data);
-      this.setState({accountInfo : data});
-    });  
-  }
-  addFavorite=(params={})=>{
-    console.log(params);
-    const jwt = window.localStorage.getItem(config.TOKEN_KEY);
-    fetch(`${config.API_ENDPOINT}/users/favorites`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization' : `bearer ${jwt}`
-      },
-      body: JSON.stringify(params)
-    })
-    .then(res=>res.json())
-    .then(data => {
-      console.log(data);
-      let favoritesIdsCopy = [...this.state.favoritesIds];
-        favoritesIdsCopy.push(params.entryId)
-        this.setState({favoritesIds : favoritesIdsCopy})
-    });
-
-  }
-  getFavorites= () => {
-    const jwt = window.localStorage.getItem(config.TOKEN_KEY)
-    
-    console.log(`bearer ${jwt}`);
-    fetch(`${config.API_ENDPOINT}/users/favorites`, {
-      method: 'GET',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization' : `bearer ${jwt}`
-      }
-    })
-    .then(res=>res.json())
-    .then(data =>{
-      console.log(data);
-      this.setState({entries: data});
-    });  
-  }
+  
   getAllEntries = () => {
     fetch(`${config.API_ENDPOINT}/entries`)
     .then(res => res.json())
@@ -222,20 +82,20 @@ class App extends React.Component{
         }}/>
         <Route exact path ='/account' render={()=>{
           return (<>
-          <AccountInfo logout={this.logout} getFavorites={this.getFavorites} accountInfo={this.state.accountInfo} getAccountInfo={this.getAccountInfo} clearEntries={this.clearEntries} getAllEntries={this.getAllEntries}/>
+          <AccountInfo setAppState={this.setAppState} accountInfo={this.state.accountInfo} clearEntries={this.clearEntries}/>
           </>);
         }}/>
         <Route exact path ='/logIn' render={()=>{
           return (
-            <LogInForm login={this.login} clearEntries={this.clearEntries}/>
+            <LogInForm setAppState={this.setAppState} clearEntries={this.clearEntries}/>
           );
         }}/>
          <Route exact path ='/signUp' render={()=>{
           return (
-            <SignUpForm clearEntries={this.clearEntries} createUser={this.createUser}/>
+            <SignUpForm setAppState={this.setAppState} clearEntries={this.clearEntries}/>
           );
         }}/>
-        <EntryList deleteFavorite={this.deleteFavorite} loggenIn={this.state.loggedIn} addFavorite={this.addFavorite} favoritesIds={this.state.favoritesIds} getFavoritesIds={this.getFavoritesIds} entries={this.state.entries}/>
+        <EntryList setAppState={this.setAppState} favoritesIds={this.state.favoritesIds} loggenIn={this.state.loggedIn} entries={this.state.entries}/>
       </main>
       </>
     );

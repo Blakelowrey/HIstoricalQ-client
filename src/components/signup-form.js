@@ -1,7 +1,7 @@
 import React from 'react';
-
-import { Link } from 'react-router-dom';
-
+import config from '../config.js';
+import TokenService from '../token-service.js';
+import { withRouter } from 'react-router-dom';
 
 class SignUpForm extends React.Component{
  
@@ -34,9 +34,27 @@ class SignUpForm extends React.Component{
         about: this.state.about,
       };
       console.log(props);
-      this.props.createUser(props);
+      this.createUser(props);
     }
     
+  }
+
+  createUser = (params = {username : '', password : '', email : ''})  => {
+    fetch(`${config.API_ENDPOINT}/users/create`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify(params)
+    }).then(res => res.json()).then(data =>{
+        const {message, token} = data;
+        if(message === 'user created'&& token){
+          console.log(data);
+          TokenService.saveAuthToken(token);
+          this.props.setAppState({loggedIn : true});
+          this.props.history.push("/account");
+        }
+    });
   }
   handleEmailChange = (event) => {
     this.setState({email: event.target.value});
@@ -63,7 +81,7 @@ class SignUpForm extends React.Component{
       <div>
       <h4>Email : </h4>
         <label>
-          <textarea value={this.state.email} onChange={this.handleEmailChange} />
+        <input type="email" value={this.state.email} onChange={this.handleEmailChange} />
         </label>
       </div>
       <div>
@@ -100,4 +118,4 @@ class SignUpForm extends React.Component{
 
 }
 
-export default SignUpForm;
+export default withRouter(SignUpForm);

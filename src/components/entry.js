@@ -17,7 +17,7 @@ class Entry extends React.Component {
         <>
           {this.props.isFavorite
             ? 
-              <button onClick={()=>this.props.deleteFavorite(this.props.entry.id)}>remove favorite</button>
+              <button onClick={()=>this.props.deleteFavorite(this.props.entry.id)}>Remove Favorite</button>
             :
               <button onClick={()=>this.props.addFavorite({entryId : this.props.entry.id})}>Add To Favorites</button> }
         </>: ''}

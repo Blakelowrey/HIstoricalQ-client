@@ -76,7 +76,7 @@ class SearchForm extends React.Component {
               checked={this.state.era === "antiquity"}
               onChange={this.handleEraChange}
             />
-            antiquity
+            Antiquity
           </label>
           <label>
             <input
