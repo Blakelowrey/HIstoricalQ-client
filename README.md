@@ -1,3 +1,5 @@
+HistoricalQ is an application for viewing and favoriting a large personally currated list of information on a variety of historical figures
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
