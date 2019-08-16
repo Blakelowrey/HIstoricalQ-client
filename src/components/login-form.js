@@ -1,5 +1,4 @@
 import React from 'react';
-import SignUpForm from './signup-form.js';
 import { Link } from 'react-router-dom';
 
 
@@ -11,6 +10,9 @@ class LogInForm extends React.Component{
       email: '',
       password: '',
     }
+  }
+  componentWillMount(){
+    this.props.clearEntries();
   }
 
   handleSubmit = (event) => {
@@ -43,7 +45,7 @@ class LogInForm extends React.Component{
       <div>
       <h4>password : </h4>
         <label>
-          <textarea value={this.state.password} onChange={this.handlePasswordChange} />
+          <input type="password" value={this.state.password} onChange={this.handlePasswordChange}/>
         </label>
       </div>
       <input type="submit" value="Submit" />

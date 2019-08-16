@@ -5,15 +5,28 @@ class Entry extends React.Component {
     super(props);
     this.state = {expanded: false}
   }
- 
+  componentDidMount(){
+    console.log();
+  }
   render(){
     return(
-      <section onClick={e=>{
-        e.preventDefault();
-        this.setState({expanded : !this.state.expanded});
-      }}>
+      <section>
         <h3>{this.props.entry.name}</h3>
         <p>{this.props.entry.description}</p>
+        {this.props.loggenIn ?
+        <>
+          {this.props.isFavorite
+            ? 
+              <button onClick={()=>this.props.deleteFavorite(this.props.entry.id)}>remove favorite</button>
+            :
+              <button onClick={()=>this.props.addFavorite({entryId : this.props.entry.id})}>Add To Favorites</button> }
+        </>: ''}
+        <button onClick={e=>{
+          e.preventDefault();
+          this.setState({expanded : !this.state.expanded});
+        }}>
+          expand info
+        </button>
         {this.state.expanded?
         <div className='expanded-info'>
           <p>Year of Birth: {this.props.entry.yob}{this.props.entry.eob}</p>
